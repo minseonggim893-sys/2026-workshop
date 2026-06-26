@@ -136,7 +136,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .edit-modal.open{display:flex;}
 .edit-modal-box{background:var(--bg2);border-radius:24px 24px 0 0;padding:28px 24px 36px;width:100%;max-width:480px;}
 .edit-modal-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px;}
-.edit-modal-input{width:100%;padding:14px 18px;font-size:16px;border:2px solid var(--border);border-radius:14px;background:var(--bg);color:var(--text);outline:none;margin-bottom:14px;}
+.edit-modal-input{width:100%;padding:14px 18px;font-size:16px;border:2px solid var(--border);border-radius:14px;background:var(--bg);color:var(--text);outline:none;margin-bottom:14px;-webkit-appearance:none;appearance:none;cursor:pointer;}
 .edit-modal-input:focus{border-color:var(--blue);}
 .edit-modal-btns{display:flex;gap:10px;}
 .edit-modal-save{flex:1;padding:15px;font-size:15px;font-weight:700;background:var(--blue);color:#fff;border:none;border-radius:14px;cursor:pointer;}
@@ -307,7 +307,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 <div class="edit-modal" id="edit-modal" onclick="closeEdit(event)">
   <div class="edit-modal-box">
     <div class="edit-modal-title" id="edit-modal-title"></div>
-    <input class="edit-modal-input" id="edit-modal-input" type="text" placeholder="내용을 입력하세요"/>
+    <select class="edit-modal-input" id="edit-modal-input"></select>
     <div class="edit-modal-btns">
       <button class="edit-modal-cancel" onclick="document.getElementById('edit-modal').classList.remove('open')">취소</button>
       <button class="edit-modal-save" onclick="saveEdit()">저장</button>
@@ -602,15 +602,33 @@ async function fetchMembers(){
   finally{document.getElementById('loading-overlay').style.display='none';}
 }
 
+const CAFE_OPTIONS=[
+  '오디스무디COLD','딸기스무디COLD','블루베리스무디COLD',
+  '딸기라떼 (수제)COLD','연유돌체라떼COLD','카페라떼COLD',
+  '아메리카노COLD','더치커피 아메리카노COLD',
+  '더치커피 디카페인 아메리카노COLD','더치커피 디카페인 라떼COLD',
+  '망고주스 (무설탕)COLD','제주한라봉 감귤주스(무설탕)COLD',
+  '자몽에이드 (수제)COLD','오미자에이드 (수제)COLD','레몬에이드COLD',
+  '오미자차 (수제)COLD','생강차 (수제)COLD',
+  '패션후르츠차 (백향과:수제)COLD',
+  '비타민 허브티 (수제) (히비스커스/장미씨열매 등)COLD',
+  '자몽차 (수제)HOT','생강라떼 (수제)HOT','카페라떼HOT',
+  '디톡스허브티 (수제) (레몬/생강 등)HOT',
+];
+const LUNCH_OPTIONS=['육회비빔밥','갈비탕'];
+
 // 수정 모달
 let editField=null;
 function openEdit(field){
   editField=field;
   const label=field==='cafe'?'☕ 카페 메뉴':'🍱 출발 점심';
   document.getElementById('edit-modal-title').textContent=label+' 수정';
-  document.getElementById('edit-modal-input').value=currentUser[field]||'';
+  const sel=document.getElementById('edit-modal-input');
+  const opts=field==='cafe'?CAFE_OPTIONS:LUNCH_OPTIONS;
+  const cur=currentUser[field]||'';
+  sel.innerHTML=`<option value="">— 선택 안 함 —</option>`
+    +opts.map(o=>`<option value="${o}"${o===cur?' selected':''}>${o}</option>`).join('');
   document.getElementById('edit-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('edit-modal-input').focus(),100);
 }
 function closeEdit(e){
   if(e.target===document.getElementById('edit-modal'))
