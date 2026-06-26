@@ -595,26 +595,19 @@ function initRaffle(){
 // API 연동
 async function fetchMembers(){
   try{
-    const res=await fetch(API_URL);
-    const data=await res.json();
-    if(Array.isArray(data)&&data.length>0) members=data;
+    const [mRes, cRes]=await Promise.all([
+      fetch(API_URL),
+      fetch(API_URL+'?action=menus')
+    ]);
+    const mData=await mRes.json();
+    const cData=await cRes.json();
+    if(Array.isArray(mData)&&mData.length>0) members=mData;
+    if(Array.isArray(cData)&&cData.length>0) CAFE_OPTIONS=cData;
   }catch(e){console.warn('시트 연동 실패, 로컬 데이터 사용',e);}
   finally{document.getElementById('loading-overlay').style.display='none';}
 }
 
-const CAFE_OPTIONS=[
-  '오디스무디COLD','딸기스무디COLD','블루베리스무디COLD',
-  '딸기라떼 (수제)COLD','연유돌체라떼COLD','카페라떼COLD',
-  '아메리카노COLD','더치커피 아메리카노COLD',
-  '더치커피 디카페인 아메리카노COLD','더치커피 디카페인 라떼COLD',
-  '망고주스 (무설탕)COLD','제주한라봉 감귤주스(무설탕)COLD',
-  '자몽에이드 (수제)COLD','오미자에이드 (수제)COLD','레몬에이드COLD',
-  '오미자차 (수제)COLD','생강차 (수제)COLD',
-  '패션후르츠차 (백향과:수제)COLD',
-  '비타민 허브티 (수제) (히비스커스/장미씨열매 등)COLD',
-  '자몽차 (수제)HOT','생강라떼 (수제)HOT','카페라떼HOT',
-  '디톡스허브티 (수제) (레몬/생강 등)HOT',
-];
+let CAFE_OPTIONS=[];
 const LUNCH_OPTIONS=['육회비빔밥','갈비탕'];
 
 // 수정 모달
