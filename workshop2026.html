@@ -425,6 +425,7 @@ function doLogin(){
   if(!f){err.textContent=`'${v}' 선생님을 찾을 수 없어요.`;return;}
   currentUser=f;
   localStorage.setItem('workshopUser',f.name);
+  document.cookie='workshopUser='+encodeURIComponent(f.name)+';max-age=2592000;path=/';
   renderHome();
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-home').classList.add('active');
@@ -445,6 +446,7 @@ function renderHome(){
 function logout(){
   currentUser=null;
   localStorage.removeItem('workshopUser');
+  document.cookie='workshopUser=;max-age=0;path=/';
   document.getElementById('name-input').value='';
   document.getElementById('login-error').textContent='';
   document.getElementById('suggest-box').innerHTML='';
@@ -676,12 +678,18 @@ async function fetchMembers(){
   }catch(e){console.warn('시트 연동 실패, 로컬 데이터 사용',e);}
   finally{
     document.getElementById('loading-overlay').style.display='none';
-    // 이전 로그인 정보로 자동 로그인
-    const saved=localStorage.getItem('workshopUser');
+    // 이전 로그인 정보로 자동 로그인 (localStorage → 쿠키 순서로 확인)
+    let saved=localStorage.getItem('workshopUser');
+    if(!saved){
+      const m=document.cookie.match(/workshopUser=([^;]+)/);
+      if(m) saved=decodeURIComponent(m[1]);
+    }
     if(saved){
       const f=members.find(m=>m.name===saved);
       if(f){
         currentUser=f;
+        localStorage.setItem('workshopUser',f.name);
+        document.cookie='workshopUser='+encodeURIComponent(f.name)+';max-age=2592000;path=/';
         renderHome();
         document.getElementById('screen-login').classList.remove('active');
         document.getElementById('screen-home').classList.add('active');
