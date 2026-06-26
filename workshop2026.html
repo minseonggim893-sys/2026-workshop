@@ -316,7 +316,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 </div>
 
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycby_btfRE9XK34zOszjIKCE7kbK8YCPRDzKFw5REN_UpeKzAQbay1fgmO-IiGx2op1etDw/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbwHvBMGPmtokORPWu_nax_0IOWuWlHzLbjP6mSDIc08onuQaIH3TpS5Nia_IkLrPZIuPQ/exec';
 let members=[
   {name:"한혁",dept:"교장실",room:"1",cafe:"오디스무디 COLD",lunch:"",bus:1,role:"교장"},
   {name:"유병구",dept:"교감",room:"2",cafe:"오디스무디 COLD",lunch:"",bus:2,role:"교감"},
@@ -602,7 +602,8 @@ async function fetchMembers(){
     const mData=await mRes.json();
     const cData=await cRes.json();
     if(Array.isArray(mData)&&mData.length>0) members=mData;
-    if(Array.isArray(cData)&&cData.length>0) CAFE_OPTIONS=cData;
+    if(cData.cafe) CAFE_OPTIONS=cData.cafe;
+    if(cData.lunch) LUNCH_OPTIONS.splice(0,LUNCH_OPTIONS.length,...cData.lunch);
   }catch(e){console.warn('시트 연동 실패, 로컬 데이터 사용',e);}
   finally{document.getElementById('loading-overlay').style.display='none';}
 }
