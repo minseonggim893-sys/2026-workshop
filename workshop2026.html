@@ -558,16 +558,28 @@ function showConfetti(){
   }
 }
 
+// 관리자가 추첨 버튼 클릭 → Firebase에 신호만 전송
 function startRaffle(){
   const pool=getRafflePool();
   if(!pool.length)return;
+  const winner=pool[Math.floor(Math.random()*pool.length)];
+  fbDb.ref('raffle/current').set({winner, startedAt: Date.now()});
+}
+
+// 모든 사람이 공통으로 실행하는 슬롯 애니메이션
+let lastStartedAt=0;
+function runSlotAnimation(winner){
+  clearTimeout(raffleTimer);
+  const pool=getRafflePool();
+  const displayPool=pool.length>0?pool:(members.length>0?members:[winner]);
   const btn=document.getElementById('raffle-btn');
   const slot=document.getElementById('raffle-slot');
   const nameEl=document.getElementById('raffle-name');
   const roleEl=document.getElementById('raffle-role');
   const deptEl=document.getElementById('raffle-dept');
   const hintEl=document.getElementById('raffle-hint');
-  btn.disabled=true;
+  if(!slot)return;
+  if(btn) btn.disabled=true;
   slot.className='raffle-slot spinning';
   hintEl.style.display='none';
   nameEl.style.display='block';
@@ -575,24 +587,25 @@ function startRaffle(){
   deptEl.style.display='block';
   let count=0;
   const totalTicks=22;
-  const winner=pool[Math.floor(Math.random()*pool.length)];
   function tick(){
-    const r=pool[Math.floor(Math.random()*pool.length)];
+    const r=displayPool[Math.floor(Math.random()*displayPool.length)];
     nameEl.textContent=r.name;
-    roleEl.textContent=r.role;
-    deptEl.textContent=r.dept;
+    roleEl.textContent=r.role||'';
+    deptEl.textContent=r.dept||'';
     count++;
     const delay=count<10?60:count<16?100:count<20?160:250;
     if(count<totalTicks){raffleTimer=setTimeout(tick,delay);}
     else{
       nameEl.textContent=winner.name;
-      roleEl.textContent=winner.role;
-      deptEl.textContent=winner.dept;
+      roleEl.textContent=winner.role||'';
+      deptEl.textContent=winner.dept||'';
       slot.className='raffle-slot winner';
       showConfetti();
-      // Firebase에 저장 → 모든 사용자 실시간 반영
-      fbDb.ref('raffle/winners').push(winner);
-      btn.disabled=false;
+      // 관리자만 당첨자 목록에 저장
+      if(currentUser&&currentUser.name==='김민성'){
+        fbDb.ref('raffle/winners').push(winner);
+      }
+      if(btn) btn.disabled=false;
     }
   }
   tick();
@@ -616,17 +629,14 @@ function initRaffle(){
   document.getElementById('raffle-reset-btn').style.display=isAdmin?'block':'none';
   document.getElementById('raffle-admin-badge').style.display=isAdmin?'none':'block';
 
-  // 기존 리스너 해제
+  // 당첨자 목록 실시간 구독
   if(raffleListener) fbDb.ref('raffle/winners').off('value', raffleListener);
-
-  // Firebase 실시간 구독
   raffleListener=fbDb.ref('raffle/winners').on('value', snap=>{
     const data=snap.val();
     raffleWinners=data?Object.values(data):[];
     updateRaffleCount();
     updateRaffleWinners();
-    if(raffleWinners.length>0) showWinnerDisplay(raffleWinners[raffleWinners.length-1]);
-    else{
+    if(raffleWinners.length===0){
       const slot=document.getElementById('raffle-slot');
       if(slot&&slot.className.includes('winner')){
         slot.className='raffle-slot';
@@ -636,6 +646,15 @@ function initRaffle(){
         document.getElementById('raffle-dept').style.display='none';
       }
     }
+  });
+
+  // 추첨 신호 실시간 구독 → 모든 사람이 슬롯 애니메이션 동시 실행
+  fbDb.ref('raffle/current').on('value', snap=>{
+    const data=snap.val();
+    if(!data||!data.winner||!data.startedAt)return;
+    if(data.startedAt<=lastStartedAt)return;
+    lastStartedAt=data.startedAt;
+    runSlotAnimation(data.winner);
   });
 }
 
