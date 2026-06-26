@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>2026 교직원 워크숍</title>
+<style>
+:root{
+  --bg:#F7F9FC;--bg2:#FFFFFF;--bg3:#EEF2F7;
+  --text:#1A1D23;--text2:#4A5568;--text3:#8A94A6;
+  --border:#E2E8F0;
+  --blue:#2563EB;--blue-bg:#EBF2FF;--blue-mid:#BFDBFE;--blue-dark:#1D4ED8;
+  --teal:#0D9488;--teal-bg:#F0FDFA;--teal-mid:#99F6E4;
+  --orange:#EA580C;--orange-bg:#FFF7ED;--orange-mid:#FED7AA;
+  --pink:#DB2777;--pink-bg:#FDF2F8;--pink-mid:#FBCFE8;
+  --green:#16A34A;--green-bg:#F0FDF4;--green-mid:#BBF7D0;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0F172A;--bg2:#1E293B;--bg3:#334155;
+    --text:#F1F5F9;--text2:#CBD5E1;--text3:#64748B;
+    --border:#334155;
+    --blue:#60A5FA;--blue-bg:#1E3A5F;--blue-mid:#1E40AF;--blue-dark:#93C5FD;
+    --teal:#2DD4BF;--teal-bg:#134E4A;--teal-mid:#115E59;
+    --orange:#FB923C;--orange-bg:#431407;--orange-mid:#7C2D12;
+    --pink:#F472B6;--pink-bg:#500724;--pink-mid:#831843;
+    --green:#4ADE80;--green-bg:#052E16;--green-mid:#14532D;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);}
+.screen{display:none;}
+.screen.active{display:flex;flex-direction:column;height:100dvh;overflow:hidden;}
+#screen-login.active{background:linear-gradient(160deg,#EBF2FF 0%,#F0FDFA 50%,#FFF7ED 100%);}
+@media(prefers-color-scheme:dark){#screen-login.active{background:linear-gradient(160deg,#0F172A 0%,#1a2744 50%,#0F172A 100%);}}
+.login-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:32px 28px;}
+.login-badge{font-size:12px;font-weight:600;color:var(--blue);background:var(--blue-bg);padding:5px 14px;border-radius:20px;margin-bottom:20px;letter-spacing:0.04em;}
+.login-icon{font-size:52px;margin-bottom:12px;}
+.login-title{font-size:28px;font-weight:800;color:var(--text);text-align:center;line-height:1.25;margin-bottom:6px;}
+.login-sub{font-size:14px;color:var(--text3);text-align:center;margin-bottom:36px;line-height:1.6;}
+.login-field{width:100%;margin-bottom:12px;}
+.login-field input{width:100%;padding:16px 20px;font-size:17px;border:2px solid var(--border);border-radius:16px;background:var(--bg2);color:var(--text);outline:none;-webkit-appearance:none;transition:border-color .15s;}
+.login-field input:focus{border-color:var(--blue);}
+.login-field input::placeholder{color:var(--text3);}
+.login-btn{width:100%;padding:17px;font-size:16px;font-weight:700;background:var(--blue);color:#fff;border:none;border-radius:16px;cursor:pointer;}
+.login-btn:active{opacity:0.85;}
+.login-error{font-size:13px;color:#EF4444;text-align:center;margin-top:10px;min-height:18px;}
+.suggest-list{width:100%;margin-top:10px;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;background:var(--bg2);box-shadow:0 4px 16px rgba(0,0,0,.08);}
+.suggest-item{padding:14px 18px;font-size:15px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
+.suggest-item:last-child{border-bottom:none;}
+.suggest-item:active{background:var(--bg3);}
+.suggest-item .s-dept{font-size:12px;color:var(--text3);margin-top:2px;}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.header h1{font-size:17px;font-weight:700;color:var(--text);}
+.header-right{margin-left:auto;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text3);font-weight:500;}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:22px;display:flex;align-items:center;padding:0;}
+.tab-bar{display:flex;border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;cursor:pointer;color:var(--text3);font-size:11px;border:none;background:none;font-weight:500;}
+.tab-item.active{color:var(--blue);}
+.tab-icon{font-size:20px;line-height:1;}
+.content{padding:20px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.bus-card{border-radius:20px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden;}
+.bus-1{background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;}
+.bus-2{background:linear-gradient(135deg,#0D9488,#0F766E);color:#fff;}
+.bus-none{background:var(--bg2);border:1.5px solid var(--border);}
+.bus-card-label{font-size:12px;font-weight:600;opacity:.8;margin-bottom:6px;}
+.bus-none .bus-card-label{color:var(--text3);opacity:1;}
+.bus-num{font-size:32px;font-weight:800;letter-spacing:-0.5px;}
+.bus-none .bus-num{color:var(--text);}
+.bus-card-sub{font-size:13px;margin-top:3px;opacity:.75;}
+.bus-none .bus-card-sub{color:var(--text3);opacity:1;}
+.bus-deco{position:absolute;right:-12px;top:-12px;font-size:80px;opacity:.12;}
+.card{background:var(--bg2);border:1.5px solid var(--border);border-radius:18px;padding:20px;margin-bottom:14px;}
+.card-label{font-size:12px;color:var(--text3);margin-bottom:6px;font-weight:600;}
+.card-value{font-size:26px;font-weight:800;color:var(--text);}
+.card-sub{font-size:13px;color:var(--text3);margin-top:3px;}
+.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px;}
+.info-tile{border-radius:16px;padding:18px;border:1.5px solid;}
+.tile-coffee{background:var(--orange-bg);border-color:var(--orange-mid);}
+.tile-lunch{background:var(--pink-bg);border-color:var(--pink-mid);}
+.tile-label{font-size:11px;font-weight:700;margin-bottom:8px;}
+.tile-coffee .tile-label{color:var(--orange);}
+.tile-lunch .tile-label{color:var(--pink);}
+.tile-value{font-size:14px;font-weight:600;color:var(--text);line-height:1.45;}
+.summary-card{background:linear-gradient(135deg,var(--teal-bg),var(--green-bg));border:1.5px solid var(--teal-mid);border-radius:18px;padding:20px;margin-bottom:14px;}
+.summary-title{font-size:13px;font-weight:700;color:var(--teal);margin-bottom:12px;}
+.summary-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:14px;color:var(--text2);font-weight:500;}
+.summary-row:last-child{margin-bottom:0;}
+.summary-icon{font-size:18px;width:24px;text-align:center;}
+.tl-day{font-size:13px;font-weight:700;color:var(--blue);margin:20px 0 14px;padding:9px 16px;background:var(--blue-bg);border-radius:12px;}
+.tl-day:first-child{margin-top:0;}
+.tl-item{display:flex;gap:14px;margin-bottom:16px;}
+.tl-time{font-size:11px;color:var(--text3);min-width:66px;padding-top:3px;line-height:1.5;font-weight:500;}
+.tl-body{flex:1;border-left:2.5px solid var(--border);padding-left:14px;}
+.tl-title{font-size:15px;color:var(--text);font-weight:600;}
+.tl-desc{font-size:12px;color:var(--text3);margin-top:4px;line-height:1.6;}
+.place-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;padding:18px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.place-info{flex:1;}
+.place-name{font-size:15px;font-weight:700;color:var(--blue);margin-bottom:4px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+.place-name:active{opacity:.7;}
+.place-addr{font-size:12px;color:var(--text3);line-height:1.5;}
+.place-extra{font-size:12px;color:var(--text3);margin-top:6px;}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.tag-blue{background:var(--blue-bg);color:var(--blue);}
+.tag-green{background:var(--green-bg);color:var(--green);}
+.tag-orange{background:var(--orange-bg);color:var(--orange);}
+.tag-pink{background:var(--pink-bg);color:var(--pink);}
+.dept-group{margin-bottom:10px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:var(--bg2);}
+.dept-header-btn{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:none;border:none;cursor:pointer;text-align:left;}
+.dept-header-btn:active{background:var(--bg3);}
+.dept-header-left{display:flex;align-items:center;gap:12px;}
+.dept-emoji{font-size:22px;}
+.dept-name{font-size:15px;font-weight:700;color:var(--text);}
+.dept-count{font-size:12px;color:var(--text3);font-weight:500;margin-top:2px;}
+.dept-arrow{font-size:12px;color:var(--text3);transition:transform .2s;display:inline-block;}
+.dept-arrow.open{transform:rotate(180deg);}
+.dept-body{display:none;border-top:1px solid var(--border);}
+.dept-body.open{display:block;}
+.member-row{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);}
+.member-row:last-child{border-bottom:none;}
+.member-name-text{font-size:15px;color:var(--text);font-weight:600;}
+.member-role{font-size:12px;color:var(--text3);margin-top:2px;}
+.member-meta{display:flex;gap:6px;align-items:center;}
+.badge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:700;}
+.badge-bus1{background:var(--blue-bg);color:var(--blue);}
+.badge-bus2{background:var(--teal-bg);color:var(--teal);}
+.badge-day{background:var(--bg3);color:var(--text3);}
+.badge-room{background:var(--bg3);color:var(--text2);}
+/* 추첨 */
+.raffle-wrap{display:flex;flex-direction:column;align-items:center;padding:28px 20px;gap:0;}
+.raffle-slot{width:100%;background:var(--bg2);border:2.5px solid var(--border);border-radius:24px;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:20px;position:relative;overflow:hidden;transition:border-color .2s;}
+.raffle-slot.spinning{border-color:var(--blue);}
+.raffle-slot.winner{border-color:var(--green);background:var(--green-bg);}
+.raffle-name{font-size:44px;font-weight:900;color:var(--text);letter-spacing:-1px;transition:none;}
+.raffle-role{font-size:14px;color:var(--text3);margin-top:6px;font-weight:500;}
+.raffle-dept{font-size:13px;color:var(--text3);margin-top:2px;}
+.raffle-hint{font-size:15px;color:var(--text3);font-weight:500;}
+.raffle-btn{width:100%;padding:20px;font-size:18px;font-weight:800;background:var(--blue);color:#fff;border:none;border-radius:18px;cursor:pointer;letter-spacing:0.02em;margin-bottom:14px;}
+.raffle-btn:active{opacity:.85;}
+.raffle-btn:disabled{opacity:.5;cursor:not-allowed;}
+.raffle-reset-btn{background:none;border:1.5px solid var(--border);border-radius:12px;padding:10px 20px;font-size:13px;color:var(--text3);cursor:pointer;font-weight:600;margin-bottom:20px;}
+.raffle-reset-btn:active{background:var(--bg3);}
+.raffle-winners{width:100%;}
+.raffle-winners-title{font-size:13px;font-weight:700;color:var(--text3);margin-bottom:10px;}
+.raffle-winner-chip{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);border:1.5px solid var(--green-mid);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;color:var(--green);margin:4px;}
+.raffle-count{font-size:13px;color:var(--text3);margin-bottom:16px;font-weight:500;}
+@keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(120px) rotate(720deg);opacity:0;}}
+.confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confetti-fall .8s ease-out forwards;}
+</style>
+</head>
+<body>
+
+<div id="screen-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-badge">대전도시과학고등학교</div>
+    <div class="login-icon">🏖️</div>
+    <div class="login-title">2026 교직원<br>워크숍</div>
+    <div class="login-sub">7월 16일(목) ~ 17일(금)<br>전라북도 부안 · 소노벨 변산</div>
+    <div class="login-field">
+      <input type="text" id="name-input" placeholder="이름을 입력하세요" autocomplete="off" oninput="onNameInput(this.value)"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">확인</button>
+    <div class="login-error" id="login-error"></div>
+    <div id="suggest-box"></div>
+  </div>
+</div>
+
+<div id="screen-home" class="screen">
+  <div class="header">
+    <span id="home-name" style="font-size:16px;font-weight:700;color:var(--text);"></span>
+    <button class="header-right" onclick="logout()">로그아웃</button>
+  </div>
+  <div class="content">
+    <div id="bus-section"></div>
+    <div id="room-section" class="card"></div>
+    <div class="info-grid">
+      <div class="info-tile tile-coffee"><div class="tile-label">☕ 카페 메뉴</div><div class="tile-value" id="my-cafe"></div></div>
+      <div class="info-tile tile-lunch"><div class="tile-label">🍱 출발 점심</div><div class="tile-value" id="my-lunch"></div></div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-title">✨ 일정 요약</div>
+      <div class="summary-row"><span class="summary-icon">📅</span>7월 16일(목) ~ 17일(금)</div>
+      <div class="summary-row"><span class="summary-icon">📍</span>전라북도 부안군 일대</div>
+      <div class="summary-row"><span class="summary-icon">🏨</span>소노벨 변산</div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-item active" onclick="showTab('home')"><span class="tab-icon">🏠</span>홈</button>
+    <button class="tab-item" onclick="showTab('schedule')"><span class="tab-icon">📅</span>일정</button>
+    <button class="tab-item" onclick="showTab('places')"><span class="tab-icon">📍</span>장소</button>
+    <button class="tab-item" onclick="showTab('members')"><span class="tab-icon">👥</span>명단</button>
+    <button class="tab-item" onclick="showTab('raffle')"><span class="tab-icon">🎰</span>추첨</button>
+  </div>
+</div>
+
+<div id="screen-schedule" class="screen">
+  <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>일정표</h1></div>
+  <div class="content">
+    <div class="tl-day">🌞 1일차 · 7월 16일(목)</div>
+    <div class="tl-item"><div class="tl-time">12:00~13:00</div><div class="tl-body"><div class="tl-title">🍖 점심식사</div><div class="tl-desc">솔가숯불갈비 서대전점<br>서구 구봉산북로7번길 40-12</div></div></div>
+    <div class="tl-item"><div class="tl-time">13:00~14:30</div><div class="tl-body"><div class="tl-title">🚌 부안 이동</div><div class="tl-desc">28인승 전세버스 2대</div></div></div>
+    <div class="tl-item"><div class="tl-time">14:30~15:30</div><div class="tl-body"><div class="tl-title">☕ Cafe 909</div><div class="tl-desc">전북 부안군 변산면 변산해변로 277</div></div></div>
+    <div class="tl-item"><div class="tl-time">15:30~16:00</div><div class="tl-body"><div class="tl-title">🏨 소노벨 변산 이동</div></div></div>
+    <div class="tl-item"><div class="tl-time">16:00~16:30</div><div class="tl-body"><div class="tl-title">📢 2026 직업계고 정책 안내</div><div class="tl-desc">충남대학교 교수 이창훈</div></div></div>
+    <div class="tl-item"><div class="tl-time">16:30~17:00</div><div class="tl-body"><div class="tl-title">🎉 레크레이션 및 숙소배치</div></div></div>
+    <div class="tl-item"><div class="tl-time">17:00~19:00</div><div class="tl-body"><div class="tl-title">🦞 저녁식사</div><div class="tl-desc">채석강해물전골</div></div></div>
+    <div class="tl-item"><div class="tl-time">19:00~</div><div class="tl-body"><div class="tl-title">🌙 자유일정</div><div class="tl-desc">BHC or 교촌치킨</div></div></div>
+    <div class="tl-day">🌅 2일차 · 7월 17일(금)</div>
+    <div class="tl-item"><div class="tl-time">~10:00</div><div class="tl-body"><div class="tl-title">🌄 기상 및 준비 · 조식</div></div></div>
+    <div class="tl-item"><div class="tl-time">10:00~12:00</div><div class="tl-body"><div class="tl-title">🪨 문화체험</div><div class="tl-desc">격포항, 채석강<br>CAFE 할리스 (채석강길 22-6)</div></div></div>
+    <div class="tl-item"><div class="tl-time">12:00~13:00</div><div class="tl-body"><div class="tl-title">🍽️ 점심식사 및 이동</div><div class="tl-desc">군산식당</div></div></div>
+    <div class="tl-item"><div class="tl-time">13:00~15:30</div><div class="tl-body"><div class="tl-title">🏫 학교 복귀 후 해산</div></div></div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-item" onclick="showTab('home')"><span class="tab-icon">🏠</span>홈</button>
+    <button class="tab-item active" onclick="showTab('schedule')"><span class="tab-icon">📅</span>일정</button>
+    <button class="tab-item" onclick="showTab('places')"><span class="tab-icon">📍</span>장소</button>
+    <button class="tab-item" onclick="showTab('members')"><span class="tab-icon">👥</span>명단</button>
+    <button class="tab-item" onclick="showTab('raffle')"><span class="tab-icon">🎰</span>추첨</button>
+  </div>
+</div>
+
+<div id="screen-places" class="screen">
+  <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>장소 안내</h1></div>
+  <div class="content">
+    <div class="place-card"><div class="place-info"><div class="place-name" onclick="openMap('솔가숯불갈비 서대전점')">솔가숯불갈비 서대전점</div><div class="place-addr">대전 서구 구봉산북로7번길 40-12 1층</div></div><span class="tag tag-orange">🍖 출발 점심</span></div>
+    <div class="place-card"><div class="place-info"><div class="place-name" onclick="openMap('Cafe 909 부안 변산')">Cafe 909</div><div class="place-addr">전북 부안군 변산면 변산해변로 277</div></div><span class="tag tag-blue">☕ 1일차 카페</span></div>
+    <div class="place-card"><div class="place-info"><div class="place-name" onclick="openMap('소노벨 변산')">소노벨 변산</div><div class="place-addr">전북특별자치도 부안군 변산면 소노로 10</div><div class="place-extra">☎ 1588-4888 · 담당 010-5637-2443 (박상일)</div></div><span class="tag tag-green">🏨 숙소</span></div>
+    <div class="place-card"><div class="place-info"><div class="place-name" onclick="openMap('채석강해물전골 부안')">채석강해물전골</div><div class="place-addr">전북 부안 채석강 일대</div></div><span class="tag tag-pink">🦞 1일차 저녁</span></div>
+    <div class="place-card"><div class="place-info"><div class="place-name" onclick="openMap('할리스 채석강점')">할리스 채석강점</div><div class="place-addr">전북 부안군 변산면 채석강길 22-6</div></div><span class="tag tag-blue">☕ 2일차 카페</span></div>
+    <div class="place-card"><div class="place-info"><div class="place-name" onclick="openMap('군산식당 부안')">군산식당</div><div class="place-addr">전북 부안 일대</div></div><span class="tag tag-orange">🍽️ 2일차 점심</span></div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-item" onclick="showTab('home')"><span class="tab-icon">🏠</span>홈</button>
+    <button class="tab-item" onclick="showTab('schedule')"><span class="tab-icon">📅</span>일정</button>
+    <button class="tab-item active" onclick="showTab('places')"><span class="tab-icon">📍</span>장소</button>
+    <button class="tab-item" onclick="showTab('members')"><span class="tab-icon">👥</span>명단</button>
+    <button class="tab-item" onclick="showTab('raffle')"><span class="tab-icon">🎰</span>추첨</button>
+  </div>
+</div>
+
+<div id="screen-members" class="screen">
+  <div class="header">
+    <button class="back-btn" onclick="showTab('home')">←</button>
+    <h1>전체 명단</h1>
+    <span style="margin-left:auto;font-size:13px;color:var(--text3);font-weight:600;" id="member-count"></span>
+  </div>
+  <div class="content"><div id="member-list-content"></div></div>
+  <div class="tab-bar">
+    <button class="tab-item" onclick="showTab('home')"><span class="tab-icon">🏠</span>홈</button>
+    <button class="tab-item" onclick="showTab('schedule')"><span class="tab-icon">📅</span>일정</button>
+    <button class="tab-item" onclick="showTab('places')"><span class="tab-icon">📍</span>장소</button>
+    <button class="tab-item active" onclick="showTab('members')"><span class="tab-icon">👥</span>명단</button>
+    <button class="tab-item" onclick="showTab('raffle')"><span class="tab-icon">🎰</span>추첨</button>
+  </div>
+</div>
+
+<div id="screen-raffle" class="screen">
+  <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>경품 추첨</h1></div>
+  <div class="content">
+    <div class="raffle-wrap">
+      <div class="raffle-slot" id="raffle-slot">
+        <div class="raffle-hint" id="raffle-hint">버튼을 눌러 추첨하세요</div>
+        <div class="raffle-name" id="raffle-name" style="display:none;"></div>
+        <div class="raffle-role" id="raffle-role" style="display:none;"></div>
+        <div class="raffle-dept" id="raffle-dept" style="display:none;"></div>
+      </div>
+      <div class="raffle-count" id="raffle-count"></div>
+      <button class="raffle-btn" id="raffle-btn" onclick="startRaffle()">🎰 추첨 시작!</button>
+      <button class="raffle-reset-btn" id="raffle-reset-btn" onclick="resetRaffle()">↺ 당첨자 초기화</button>
+      <div id="raffle-admin-badge" style="display:none;font-size:13px;color:var(--text3);margin-bottom:16px;text-align:center;">🔒 추첨은 관리자만 진행할 수 있어요</div>
+      <div class="raffle-winners" id="raffle-winners"></div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-item" onclick="showTab('home')"><span class="tab-icon">🏠</span>홈</button>
+    <button class="tab-item" onclick="showTab('schedule')"><span class="tab-icon">📅</span>일정</button>
+    <button class="tab-item" onclick="showTab('places')"><span class="tab-icon">📍</span>장소</button>
+    <button class="tab-item" onclick="showTab('members')"><span class="tab-icon">👥</span>명단</button>
+    <button class="tab-item active" onclick="showTab('raffle')"><span class="tab-icon">🎰</span>추첨</button>
+  </div>
+</div>
+
+<script>
+const members=[
+  {name:"한혁",dept:"교장실",room:"1",cafe:"오디스무디 COLD",lunch:"",bus:1,role:"교장"},
+  {name:"유병구",dept:"교감",room:"2",cafe:"오디스무디 COLD",lunch:"",bus:2,role:"교감"},
+  {name:"고은경",dept:"교무부",room:"29",cafe:"자몽에이드 COLD",lunch:"육회비빔밥",bus:1,role:"교사"},
+  {name:"권영성",dept:"방과후인성복지부",room:"31",cafe:"더치커피 아메리카노 COLD",lunch:"육회비빔밥",bus:1,role:"교사"},
+  {name:"김동운",dept:"직업교육부",room:"당일",cafe:"오미자차 COLD",lunch:"육회비빔밥",bus:null,role:"교사"},
+  {name:"김동희",dept:"평가부",room:"10",cafe:"제주한라봉 감귤주스 COLD",lunch:"갈비탕",bus:1,role:"교사"},
+  {name:"김민성",dept:"직업교육부",room:"5",cafe:"오디스무디 COLD",lunch:"육회비빔밥",bus:2,role:"교사"},
+  {name:"김상민",dept:"예체능부",room:"31",cafe:"",lunch:"",bus:1,role:"교사"},
+  {name:"김소희",dept:"교무부",room:"6",cafe:"",lunch:"",bus:1,role:"교사"},
+  {name:"김정은",dept:"예체능부",room:"당일",cafe:"패션후르츠차 COLD",lunch:"갈비탕",bus:null,role:"교사"},
+  {name:"김준혁",dept:"연구부",room:"23",cafe:"딸기스무디 COLD",lunch:"갈비탕",bus:1,role:"교사"},
+  {name:"김지수",dept:"교육지원부",room:"6",cafe:"망고주스 COLD",lunch:"육회비빔밥",bus:1,role:"교사"},
+  {name:"김지운",dept:"학생생활부",room:"당일",cafe:"딸기라떼 COLD",lunch:"육회비빔밥",bus:null,role:"교사"},
+  {name:"김학철",dept:"군특성화안전부",room:"4",cafe:"카페라떼 COLD",lunch:"",bus:1,role:"교사"},
+  {name:"김혜림",dept:"평가부",room:"10",cafe:"망고주스 COLD",lunch:"갈비탕",bus:1,role:"교사"},
+  {name:"류정희",dept:"학생생활부",room:"당일",cafe:"오미자에이드 COLD",lunch:"갈비탕",bus:null,role:"교사"},
+  {name:"민정훈",dept:"학생생활부",room:"24",cafe:"아메리카노 COLD",lunch:"육회비빔밥",bus:1,role:"교사"},
+  {name:"박경림",dept:"건축,드론과",room:"20",cafe:"더치커피 아메리카노 COLD",lunch:"",bus:2,role:"교사"},
+  {name:"박래우",dept:"군특성화안전부",room:"4",cafe:"더치커피 아메리카노 COLD",lunch:"",bus:1,role:"교사"},
+  {name:"박영민",dept:"기계/모빌리티과",room:"12",cafe:"",lunch:"",bus:1,role:"교사"},
+  {name:"박지원",dept:"학생생활부",room:"30",cafe:"더치커피 아메리카노 COLD",lunch:"육회비빔밥",bus:1,role:"교사"},
+  {name:"백송이",dept:"전기배터리과",room:"22",cafe:"딸기라떼 COLD",lunch:"육회비빔밥",bus:2,role:"교사"},
+  {name:"서인희",dept:"방과후인성복지부",room:"당일",cafe:"디톡스허브티 HOT",lunch:"",bus:null,role:"교사"},
+  {name:"송인정",dept:"환경지역사회부",room:"21",cafe:"비타민 허브티 COLD",lunch:"",bus:2,role:"교사"},
+  {name:"안수영",dept:"교육지원부",room:"20",cafe:"오디스무디 COLD",lunch:"육회비빔밥",bus:2,role:"교사"},
+  {name:"오상원",dept:"교무부",room:"14",cafe:"딸기스무디 COLD",lunch:"",bus:1,role:"교사"},
+  {name:"유진상",dept:"진로직업상담부",room:"13",cafe:"더치커피 디카페인 아메리카노 COLD",lunch:"",bus:1,role:"교사"},
+  {name:"이완복",dept:"진로직업상담부",room:"13",cafe:"제주한라봉 감귤주스 COLD",lunch:"",bus:1,role:"교사"},
+  {name:"이융구",dept:"기계/모빌리티과",room:"30",cafe:"더치커피 디카페인 라떼 COLD",lunch:"",bus:1,role:"교사"},
+  {name:"이춘경",dept:"평가부",room:"11",cafe:"제주한라봉 감귤주스 COLD",lunch:"갈비탕",bus:2,role:"교사"},
+  {name:"임선영",dept:"교무부",room:"19",cafe:"자몽차 HOT",lunch:"",bus:2,role:"교무실무원"},
+  {name:"임수정",dept:"환경지역사회부",room:"21",cafe:"자몽에이드 COLD",lunch:"육회비빔밥",bus:2,role:"교사"},
+  {name:"임정수",dept:"건설과",room:"당일",cafe:"딸기라떼 COLD",lunch:"",bus:null,role:"교사"},
+  {name:"장금석",dept:"환경지역사회부",room:"7",cafe:"생강차 COLD",lunch:"",bus:2,role:"교사"},
+  {name:"정연일",dept:"교무부",room:"8",cafe:"오디스무디 COLD",lunch:"",bus:2,role:"교사"},
+  {name:"정하형",dept:"연구부",room:"22",cafe:"망고주스 COLD",lunch:"육회비빔밥",bus:2,role:"교사"},
+  {name:"조아라",dept:"파티시에과",room:"29",cafe:"",lunch:"갈비탕",bus:2,role:"교사"},
+  {name:"조현분",dept:"Wee클래스",room:"당일",cafe:"생강라떼 HOT",lunch:"갈비탕",bus:null,role:"교사"},
+  {name:"지재형",dept:"전기배터리과",room:"23",cafe:"오미자에이드 COLD",lunch:"갈비탕",bus:2,role:"교사"},
+  {name:"차국환",dept:"파티시에과",room:"12",cafe:"연유돌체라떼 COLD",lunch:"육회비빔밥",bus:2,role:"교사"},
+  {name:"채홍기",dept:"직업교육부",room:"24",cafe:"패션후르츠차 COLD",lunch:"",bus:2,role:"교사"},
+  {name:"최다혜",dept:"건축,드론과",room:"당일",cafe:"자몽에이드 COLD",lunch:"",bus:null,role:"교사"},
+  {name:"한도석",dept:"직업교육부",room:"5",cafe:"생강차 COLD",lunch:"육회비빔밥",bus:1,role:"교사"},
+  {name:"한아영",dept:"직업교육부",room:"19",cafe:"망고주스 COLD",lunch:"육회비빔밥",bus:2,role:"취업지원관"},
+  {name:"한천희",dept:"군특성화안전부",room:"14",cafe:"오미자차 COLD",lunch:"",bus:2,role:"교사"},
+  {name:"홍성룡",dept:"학생생활부",room:"당일",cafe:"",lunch:"",bus:null,role:"교사"},
+  {name:"황무환",dept:"교육정보부",room:"7",cafe:"",lunch:"",bus:2,role:"교사"},
+  {name:"명숙",dept:"학년부",room:"11",cafe:"오디스무디 COLD",lunch:"갈비탕",bus:1,role:"교사"},
+  {name:"김정민",dept:"행정실",room:"3",cafe:"딸기라떼 COLD",lunch:"",bus:1,role:"행정실장"},
+  {name:"김윤화",dept:"행정실",room:"16",cafe:"패션후르츠차 COLD",lunch:"육회비빔밥",bus:1,role:"주무관"},
+  {name:"이상규",dept:"행정실",room:"17",cafe:"",lunch:"",bus:2,role:"주무관"},
+  {name:"전민성",dept:"행정실",room:"17",cafe:"더치커피 아메리카노 COLD",lunch:"육회비빔밥",bus:2,role:"주무관"},
+  {name:"김채송",dept:"행정실",room:"18",cafe:"오디스무디 COLD",lunch:"육회비빔밥",bus:1,role:"주무관"},
+  {name:"김동숙",dept:"행정실",room:"16",cafe:"레몬에이드 COLD",lunch:"",bus:1,role:"행정실무원"},
+  {name:"정승원",dept:"행정실",room:"18",cafe:"",lunch:"",bus:1,role:"주무관"},
+  {name:"김복순",dept:"급식실",room:"26",cafe:"블루베리스무디 COLD",lunch:"",bus:2,role:"조리원"},
+  {name:"조미정",dept:"급식실",room:"26",cafe:"블루베리스무디 COLD",lunch:"",bus:2,role:"조리원"},
+  {name:"김금주",dept:"급식실",room:"25",cafe:"딸기스무디 COLD",lunch:"",bus:2,role:"조리원"},
+  {name:"임현정",dept:"급식실",room:"25",cafe:"딸기스무디 COLD",lunch:"",bus:2,role:"조리원"},
+];
+
+const deptEmoji={
+  '교장실':'👑','교감':'🎖️','교무부':'📋','직업교육부':'💼',
+  '학생생활부':'🧑‍🎓','행정실':'📁','급식실':'🍽️','환경지역사회부':'🌿',
+  '평가부':'📊','군특성화안전부':'🛡️','교육지원부':'🤝','방과후인성복지부':'🌱',
+  '연구부':'🔬','예체능부':'🎨','전기배터리과':'⚡','기계/모빌리티과':'⚙️',
+  '건축,드론과':'🏗️','파티시에과':'🍰','진로직업상담부':'🧭',
+  '교육정보부':'💻','학년부':'📚','건설과':'🔧','Wee클래스':'💙',
+};
+
+// 고정 우선순위
+const PRIORITY=['교장실','교감','교무부','직업교육부'];
+
+function getTitle(r){
+  if(r==='교사') return '선생님';
+  return r+'님';
+}
+
+let currentUser=null;
+
+function onNameInput(v){
+  document.getElementById('login-error').textContent='';
+  const box=document.getElementById('suggest-box');
+  if(!v.trim()){box.innerHTML='';return;}
+  const m=members.filter(m=>m.name.includes(v.trim()));
+  if(m.length===0||m.length===members.length){box.innerHTML='';return;}
+  box.innerHTML=`<div class="suggest-list">${m.map(m=>`<div class="suggest-item" onclick="pickSuggest('${m.name}')"><span>${m.name}</span><div class="s-dept">${m.dept} · ${m.role}</div></div>`).join('')}</div>`;
+}
+function pickSuggest(n){document.getElementById('name-input').value=n;document.getElementById('suggest-box').innerHTML='';doLogin();}
+function doLogin(){
+  const v=document.getElementById('name-input').value.trim();
+  const err=document.getElementById('login-error');
+  if(!v){err.textContent='이름을 입력해 주세요.';return;}
+  const f=members.find(m=>m.name===v);
+  if(!f){err.textContent=`'${v}' 선생님을 찾을 수 없어요.`;return;}
+  currentUser=f;renderHome();
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-home').classList.add('active');
+}
+function renderHome(){
+  document.getElementById('home-name').textContent=currentUser.name+' '+getTitle(currentUser.role);
+  const b=currentUser.bus;
+  let h='';
+  if(b===1)h=`<div class="bus-card bus-1"><div class="bus-deco">🚌</div><div class="bus-card-label">탑승 버스</div><div class="bus-num">1호차</div><div class="bus-card-sub">28인승 전세버스</div></div>`;
+  else if(b===2)h=`<div class="bus-card bus-2"><div class="bus-deco">🚌</div><div class="bus-card-label">탑승 버스</div><div class="bus-num">2호차</div><div class="bus-card-sub">28인승 전세버스</div></div>`;
+  else h=`<div class="bus-card bus-none"><div class="bus-card-label">탑승 버스</div><div class="bus-num" style="color:var(--text);">당일 귀가</div><div class="bus-card-sub">버스 미탑승</div></div>`;
+  document.getElementById('bus-section').innerHTML=h;
+  const r=currentUser.room==='당일'?'당일 귀가':currentUser.room+'호';
+  document.getElementById('room-section').innerHTML=`<div class="card-label">🚪 숙소 호실</div><div class="card-value">${r}</div><div class="card-sub">소노벨 변산</div>`;
+  document.getElementById('my-cafe').textContent=currentUser.cafe||'—';
+  document.getElementById('my-lunch').textContent=currentUser.lunch||'—';
+}
+function logout(){
+  currentUser=null;
+  document.getElementById('name-input').value='';
+  document.getElementById('login-error').textContent='';
+  document.getElementById('suggest-box').innerHTML='';
+  document.getElementById('screen-home').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+}
+function showTab(t){
+  ['home','schedule','places','members'].forEach(s=>document.getElementById('screen-'+s).classList.remove('active'));
+  document.getElementById('screen-'+t).classList.add('active');
+  document.querySelectorAll('.tab-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll(`[onclick="showTab('${t}')"]`).forEach(el=>el.classList.add('active'));
+  if(t==='members')renderMemberList();
+  if(t==='raffle')initRaffle();
+}
+function toggleDept(id){
+  const body=document.getElementById('body-'+id);
+  const arrow=document.getElementById('arrow-'+id);
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+function renderMemberList(){
+  // 부서별 그룹핑
+  const d={};
+  members.forEach(m=>{if(!d[m.dept])d[m.dept]=[];d[m.dept].push(m);});
+
+  // 정렬: 우선순위 4개 먼저, 나머지는 인원 많은 순
+  const priority=PRIORITY.filter(p=>d[p]);
+  const rest=Object.keys(d)
+    .filter(k=>!PRIORITY.includes(k))
+    .sort((a,b)=>d[b].length-d[a].length);
+  const sorted=[...priority,...rest];
+
+  document.getElementById('member-count').textContent=members.length+'명';
+  let h='';
+  sorted.forEach((dept,i)=>{
+    const list=d[dept];
+    const emoji=deptEmoji[dept]||'👤';
+    const id='dept'+i;
+    const rows=list.map(m=>{
+      const r=m.room==='당일'?'당일':m.room+'호';
+      const bc=m.bus===1?'badge-bus1':m.bus===2?'badge-bus2':'badge-day';
+      const bl=m.bus?m.bus+'호차':'당일귀가';
+      return `<div class="member-row">
+        <div><div class="member-name-text">${m.name}</div><div class="member-role">${m.role}</div></div>
+        <div class="member-meta"><span class="badge ${bc}">${bl}</span><span class="badge badge-room">${r}</span></div>
+      </div>`;
+    }).join('');
+    h+=`<div class="dept-group">
+      <button class="dept-header-btn" onclick="toggleDept('${id}')">
+        <div class="dept-header-left">
+          <span class="dept-emoji">${emoji}</span>
+          <div><div class="dept-name">${dept}</div><div class="dept-count">${list.length}명</div></div>
+        </div>
+        <span class="dept-arrow" id="arrow-${id}">▼</span>
+      </button>
+      <div class="dept-body" id="body-${id}">${rows}</div>
+    </div>`;
+  });
+  document.getElementById('member-list-content').innerHTML=h;
+}
+// 추첨
+let raffleWinners=[];
+let raffleTimer=null;
+
+function getRafflePool(){
+  return members.filter(m=>!raffleWinners.find(w=>w.name===m.name));
+}
+
+function updateRaffleCount(){
+  const pool=getRafflePool();
+  document.getElementById('raffle-count').textContent=`남은 인원 ${pool.length}명 / 전체 ${members.length}명`;
+  document.getElementById('raffle-btn').disabled=pool.length===0;
+  if(pool.length===0) document.getElementById('raffle-btn').textContent='모두 추첨 완료 🎉';
+  else document.getElementById('raffle-btn').textContent='🎰 추첨 시작!';
+}
+
+function updateRaffleWinners(){
+  const el=document.getElementById('raffle-winners');
+  if(raffleWinners.length===0){el.innerHTML='';return;}
+  el.innerHTML=`<div class="raffle-winners-title">🏆 당첨자 (${raffleWinners.length}명)</div>`
+    +raffleWinners.map((w,i)=>`<span class="raffle-winner-chip">${i+1}. ${w.name}</span>`).join('');
+}
+
+function showConfetti(){
+  const slot=document.getElementById('raffle-slot');
+  const colors=['#2563EB','#16A34A','#EA580C','#DB2777','#0D9488'];
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='confetti-piece';
+    p.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*30}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*0.3}s;animation-duration:${0.6+Math.random()*0.5}s;`;
+    slot.appendChild(p);
+    setTimeout(()=>p.remove(),1200);
+  }
+}
+
+function startRaffle(){
+  const pool=getRafflePool();
+  if(!pool.length)return;
+  const btn=document.getElementById('raffle-btn');
+  const slot=document.getElementById('raffle-slot');
+  const nameEl=document.getElementById('raffle-name');
+  const roleEl=document.getElementById('raffle-role');
+  const deptEl=document.getElementById('raffle-dept');
+  const hintEl=document.getElementById('raffle-hint');
+  btn.disabled=true;
+  slot.className='raffle-slot spinning';
+  hintEl.style.display='none';
+  nameEl.style.display='block';
+  roleEl.style.display='block';
+  deptEl.style.display='block';
+  let count=0;
+  const totalTicks=22;
+  function tick(){
+    const r=pool[Math.floor(Math.random()*pool.length)];
+    nameEl.textContent=r.name;
+    roleEl.textContent=r.role;
+    deptEl.textContent=r.dept;
+    count++;
+    const delay=count<10?60:count<16?100:count<20?160:250;
+    if(count<totalTicks){raffleTimer=setTimeout(tick,delay);}
+    else{
+      // 최종 당첨자
+      const winner=pool[Math.floor(Math.random()*pool.length)];
+      nameEl.textContent=winner.name;
+      roleEl.textContent=winner.role;
+      deptEl.textContent=winner.dept;
+      slot.className='raffle-slot winner';
+      raffleWinners.push(winner);
+      showConfetti();
+      updateRaffleCount();
+      updateRaffleWinners();
+      btn.disabled=false;
+    }
+  }
+  tick();
+}
+
+function resetRaffle(){
+  if(raffleWinners.length===0)return;
+  raffleWinners=[];
+  clearTimeout(raffleTimer);
+  const slot=document.getElementById('raffle-slot');
+  slot.className='raffle-slot';
+  document.getElementById('raffle-hint').style.display='block';
+  document.getElementById('raffle-name').style.display='none';
+  document.getElementById('raffle-role').style.display='none';
+  document.getElementById('raffle-dept').style.display='none';
+  updateRaffleCount();
+  updateRaffleWinners();
+}
+
+function initRaffle(){
+  const isAdmin=currentUser&&currentUser.name==='김민성';
+  document.getElementById('raffle-btn').style.display=isAdmin?'block':'none';
+  document.getElementById('raffle-reset-btn').style.display=isAdmin?'block':'none';
+  document.getElementById('raffle-admin-badge').style.display=isAdmin?'none':'block';
+  updateRaffleCount();
+  updateRaffleWinners();
+}
+
+function openMap(query){
+  window.open('https://map.kakao.com/?q='+encodeURIComponent(query),'_blank');
+}
+document.getElementById('name-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script>
+</body>
+</html>
