@@ -714,6 +714,22 @@ function openMap(query){
 }
 document.getElementById('name-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 fetchMembers();
+// 60초마다 시트 데이터 자동 새로고침
+setInterval(async ()=>{
+  try{
+    const [mRes,cRes]=await Promise.all([
+      fetch(API_URL),
+      fetch(API_URL+'?action=menus')
+    ]);
+    const mData=await mRes.json();
+    const cData=await cRes.json();
+    if(Array.isArray(mData)&&mData.length>0) members=mData;
+    if(cData.cafe) CAFE_OPTIONS=cData.cafe;
+    if(cData.lunch) LUNCH_OPTIONS.splice(0,LUNCH_OPTIONS.length,...cData.lunch);
+    // 현재 탭이 명단이면 바로 반영
+    if(document.getElementById('tab-members')?.classList.contains('active')) renderMemberList();
+  }catch(e){}
+}, 60000);
 </script>
 </body>
 </html>
