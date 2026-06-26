@@ -726,7 +726,13 @@ setInterval(async ()=>{
     if(Array.isArray(mData)&&mData.length>0) members=mData;
     if(cData.cafe) CAFE_OPTIONS=cData.cafe;
     if(cData.lunch) LUNCH_OPTIONS.splice(0,LUNCH_OPTIONS.length,...cData.lunch);
-    // 현재 탭이 명단이면 바로 반영
+    // 현재 유저 정보 최신화
+    if(currentUser){
+      const fresh=members.find(m=>m.name===currentUser.name);
+      if(fresh) currentUser=fresh;
+    }
+    // 현재 보이는 탭 즉시 갱신
+    if(document.getElementById('tab-home')?.classList.contains('active')) renderHome();
     if(document.getElementById('tab-members')?.classList.contains('active')) renderMemberList();
   }catch(e){}
 }, 60000);
