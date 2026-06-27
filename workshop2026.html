@@ -523,6 +523,7 @@ function renderMemberList(){
 let raffleWinners=[];
 let raffleTimer=null;
 let raffleListener=null;
+let raffleCurrentListener=null;
 
 function getRafflePool(){
   return members.filter(m=>!raffleWinners.find(w=>w.name===m.name));
@@ -666,7 +667,8 @@ function initRaffle(){
   });
 
   // 추첨 신호 실시간 구독 → 모든 사람이 슬롯 애니메이션 동시 실행
-  fbDb.ref('raffle/current').on('value', snap=>{
+  if(raffleCurrentListener) fbDb.ref('raffle/current').off('value', raffleCurrentListener);
+  raffleCurrentListener=fbDb.ref('raffle/current').on('value', snap=>{
     const data=snap.val();
     if(!data||!data.winner||!data.startedAt)return;
     if(data.startedAt<=lastStartedAt)return;
