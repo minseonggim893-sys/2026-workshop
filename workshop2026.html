@@ -224,7 +224,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 </div>
 
 <div id="screen-schedule" class="screen">
-  <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>일정표</h1></div>
+  <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>일정표</h1><span style="margin-left:auto;font-size:10px;color:var(--text-muted);opacity:0.6;">DUSH AX(AI+X) 신기술 연구회</span></div>
   <div class="content">
     <div class="tl-day">🌞 1일차 · 7월 16일(목)</div>
     <div class="tl-item"><div class="tl-time">12:00~13:00</div><div class="tl-body"><div class="tl-title">🍖 점심식사</div><div class="tl-desc">솔가숯불갈비 서대전점<br>서구 구봉산북로7번길 40-12</div></div></div>
@@ -251,7 +251,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 </div>
 
 <div id="screen-places" class="screen">
-  <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>장소 안내</h1></div>
+  <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>장소 안내</h1><span style="margin-left:auto;font-size:10px;color:var(--text-muted);opacity:0.6;">DUSH AX(AI+X) 신기술 연구회</span></div>
   <div class="content">
     <div class="place-card"><div class="place-info"><div class="place-name" onclick="openMap('솔가숯불갈비 서대전점')">솔가숯불갈비 서대전점</div><div class="place-addr">대전 서구 구봉산북로7번길 40-12 1층</div></div><span class="tag tag-orange">🍖 출발 점심</span></div>
     <div class="place-card"><div class="place-info"><div class="place-name" onclick="openMap('Cafe 909 부안 변산')">Cafe 909</div><div class="place-addr">전북 부안군 변산면 변산해변로 277</div></div><span class="tag tag-blue">☕ 1일차 카페</span></div>
@@ -274,6 +274,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
     <button class="back-btn" onclick="showTab('home')">←</button>
     <h1>전체 명단</h1>
     <span style="margin-left:auto;font-size:13px;color:var(--text3);font-weight:600;" id="member-count"></span>
+    <span style="font-size:10px;color:var(--text-muted);opacity:0.6;margin-left:8px;">DUSH AX(AI+X) 신기술 연구회</span>
   </div>
   <div class="content"><div id="member-list-content"></div></div>
   <div class="tab-bar">
@@ -286,7 +287,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 </div>
 
 <div id="screen-raffle" class="screen">
-  <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>경품 추첨</h1></div>
+  <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>경품 추첨</h1><span style="margin-left:auto;font-size:10px;color:var(--text-muted);opacity:0.6;">DUSH AX(AI+X) 신기술 연구회</span></div>
   <div class="content">
     <div class="raffle-wrap">
       <div class="raffle-slot" id="raffle-slot">
@@ -445,12 +446,12 @@ function renderHome(){
   document.getElementById('home-name').textContent=currentUser.name+' '+getTitle(currentUser.role);
   const b=currentUser.bus;
   let h='';
-  if(b===1)h=`<div class="bus-card bus-1"><div class="bus-deco">🚌</div><div class="bus-card-label">탑승 버스</div><div class="bus-num">1호차</div><div class="bus-card-sub">28인승 전세버스</div></div>`;
-  else if(b===2)h=`<div class="bus-card bus-2"><div class="bus-deco">🚌</div><div class="bus-card-label">탑승 버스</div><div class="bus-num">2호차</div><div class="bus-card-sub">28인승 전세버스</div></div>`;
-  else h=`<div class="bus-card bus-none"><div class="bus-card-label">탑승 버스</div><div class="bus-num" style="color:var(--text);">당일 귀가</div><div class="bus-card-sub">버스 미탑승</div></div>`;
+  if(b===1)h=`<div class="bus-card bus-1" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;"><div><div class="bus-card-label">탑승 버스</div><div class="bus-card-sub">28인승 전세버스</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="bus-num" style="font-size:26px;">1호차</span><span style="font-size:28px;">🚌</span></div></div>`;
+  else if(b===2)h=`<div class="bus-card bus-2" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;"><div><div class="bus-card-label">탑승 버스</div><div class="bus-card-sub">28인승 전세버스</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="bus-num" style="font-size:26px;">2호차</span><span style="font-size:28px;">🚌</span></div></div>`;
+  else h=`<div class="bus-card bus-none" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;"><div><div class="bus-card-label">탑승 버스</div><div class="bus-card-sub">버스 미탑승</div></div><div style="font-size:22px;font-weight:800;color:var(--text);">당일귀가 🚗</div></div>`;
   document.getElementById('bus-section').innerHTML=h;
   const r=currentUser.room==='당일'?'당일 귀가':currentUser.room+'호';
-  document.getElementById('room-section').innerHTML=`<div class="card-label">🚪 숙소 호실</div><div class="card-value">${r}</div><div class="card-sub">소노벨 변산</div>`;
+  document.getElementById('room-section').innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;"><div><div class="card-label">🚪 숙소 호실</div><div class="card-sub" style="font-size:13px;color:var(--text3);">소노벨 변산</div></div><div style="font-size:24px;font-weight:800;color:var(--text);">${r}</div></div>`;
   document.getElementById('my-cafe').textContent=currentUser.cafe||'—';
   document.getElementById('my-lunch').textContent=currentUser.lunch||'—';
 }
