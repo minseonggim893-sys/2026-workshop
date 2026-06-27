@@ -534,18 +534,15 @@ const PRIZES=[
   {name:'최고급 와이퍼',count:3,sponsor:'모빌리티과 협찬',emoji:'🚗'},
   {name:'최고급 안마기',count:3,sponsor:'협찬',emoji:'💆'},
 ];
-// 경품 풀 생성 (셔플된 고정 순서 - Firebase에서 관리)
-let prizePool=null;
-function buildPrizePool(){
-  const pool=[];
-  PRIZES.forEach(p=>{for(let i=0;i<p.count;i++)pool.push(p);});
-  // Fisher-Yates shuffle
-  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
-  return pool;
-}
-function getPrizeForIndex(idx){
-  if(!prizePool||prizePool.length===0) return null;
-  return prizePool[idx]||null;
+// 당첨자 중 남은 경품 슬롯에서 랜덤 배정
+function pickRandomPrize(){
+  const available=[];
+  PRIZES.forEach(p=>{
+    const used=raffleWinners.filter(w=>w.prize&&w.prize.name===p.name).length;
+    for(let i=0;i<p.count-used;i++) available.push(p);
+  });
+  if(!available.length) return null;
+  return available[Math.floor(Math.random()*available.length)];
 }
 
 // 추첨
@@ -574,7 +571,7 @@ function updateRaffleWinners(){
   if(raffleWinners.length===0){el.innerHTML='';return;}
   el.innerHTML=`<div class="raffle-winners-title">🏆 당첨자 (${raffleWinners.length}명)</div>`
     +raffleWinners.map((w,i)=>{
-      const p=getPrizeForIndex(i);
+      const p=w.prize;
       const prizeStr=p?`<span style="font-size:11px;color:var(--text3);font-weight:500;margin-left:4px;">${p.emoji}${p.name}</span>`:'';
       return `<div class="raffle-winner-chip">${i+1}. ${w.name}${prizeStr}</div>`;
     }).join('');
@@ -614,12 +611,8 @@ function startRaffle(){
   const pool=getRafflePool();
   if(!pool.length)return;
   const winner=pool[Math.floor(Math.random()*pool.length)];
-  // prizePool 없으면 생성 후 저장
-  const doStart=()=>fbDb.ref('raffle/current').set({winner, startedAt: Date.now()});
-  if(!prizePool||prizePool.length===0){
-    const newPool=buildPrizePool();
-    fbDb.ref('raffle/prizePool').set(newPool.map(p=>p.name)).then(()=>doStart());
-  } else { doStart(); }
+  const prize=pickRandomPrize();
+  fbDb.ref('raffle/current').set({winner, prize, startedAt: Date.now()});
 }
 
 // 모든 사람이 공통으로 실행하는 슬롯 애니메이션
@@ -656,17 +649,15 @@ function runSlotAnimation(winner){
       roleEl.textContent=winner.role||'';
       deptEl.textContent=winner.dept||'';
       const prizeEl=document.getElementById('raffle-prize');
-      const nextIdx=raffleWinners.length;
-      const prize=getPrizeForIndex(nextIdx);
       if(prizeEl){
-        if(prize){prizeEl.textContent=`${prize.emoji} ${prize.name}`;prizeEl.style.display='block';}
+        if(winner.prize){prizeEl.textContent=`${winner.prize.emoji} ${winner.prize.name}`;prizeEl.style.display='block';}
         else{prizeEl.style.display='none';}
       }
       slot.className='raffle-slot winner';
       showConfetti();
       // 관리자만 당첨자 목록에 저장
       if(currentUser&&currentUser.name==='김민성'){
-        fbDb.ref('raffle/winners').push(winner);
+        fbDb.ref('raffle/winners').push({...winner, prize: winner.prize||null});
       }
       if(btn) btn.disabled=false;
     }
@@ -677,11 +668,7 @@ function runSlotAnimation(winner){
 function resetRaffle(){
   if(raffleWinners.length===0)return;
   clearTimeout(raffleTimer);
-  fbDb.ref('raffle').remove().then(()=>{
-    const newPool=buildPrizePool();
-    fbDb.ref('raffle/prizePool').set(newPool.map(p=>p.name));
-  });
-  prizePool=null;
+  fbDb.ref('raffle').remove();
   const slot=document.getElementById('raffle-slot');
   slot.className='raffle-slot';
   document.getElementById('raffle-hint').style.display='block';
@@ -693,20 +680,21 @@ function resetRaffle(){
 function renderPrizeList(){
   const el=document.getElementById('prize-list-items');
   if(!el)return;
-  // prizePool 없으면 PRIZES 기본 목록만 표시
-  if(!prizePool||prizePool.length===0){
-    el.innerHTML=PRIZES.map(p=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span>${p.emoji}</span><span style="font-size:12px;font-weight:700;color:var(--text1);">${p.name} <span style="font-weight:400;color:var(--text3);">×${p.count}</span></span><span style="font-size:11px;color:var(--text3);">${p.sponsor}</span></div>`).join('');
-    return;
-  }
-  // prizePool 기반으로 순번별 경품 표시
-  el.innerHTML=prizePool.map((p,i)=>{
-    const w=raffleWinners[i];
-    const drawn=!!w;
-    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-      <span style="font-size:12px;color:var(--text3);min-width:22px;font-weight:600;">${i+1}.</span>
-      <span style="font-size:15px;">${p.emoji}</span>
-      <span style="font-size:12px;font-weight:700;color:var(--text1);flex:1;">${p.name}<span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:4px;">${p.sponsor}</span></span>
-      <span style="font-size:12px;padding:2px 10px;border-radius:10px;background:${drawn?'#D1FAE5':'var(--bg3)'};color:${drawn?'#065F46':'var(--text3)'};font-weight:${drawn?700:400};">${drawn?w.name:'미추첨'}</span>
+  el.innerHTML=PRIZES.map(p=>{
+    const winners=raffleWinners.filter(w=>w.prize&&w.prize.name===p.name);
+    const slots=Array.from({length:p.count},(_,i)=>{
+      const w=winners[i];
+      return w
+        ?`<span style="font-size:12px;padding:2px 10px;border-radius:10px;background:#D1FAE5;color:#065F46;font-weight:700;margin:2px;display:inline-block;">${w.name}</span>`
+        :`<span style="font-size:12px;padding:2px 10px;border-radius:10px;background:var(--bg3);color:var(--text3);margin:2px;display:inline-block;">미추첨</span>`;
+    }).join('');
+    return `<div style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="font-size:15px;">${p.emoji}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text1);">${p.name}</span>
+        <span style="font-size:11px;color:var(--text3);">${p.sponsor}</span>
+      </div>
+      <div style="padding-left:4px;">${slots}</div>
     </div>`;
   }).join('');
 }
@@ -716,16 +704,7 @@ function initRaffle(){
   document.getElementById('raffle-btn').style.display=isAdmin?'block':'none';
   document.getElementById('raffle-reset-btn').style.display=isAdmin?'block':'none';
   document.getElementById('raffle-admin-badge').style.display=isAdmin?'none':'block';
-  // prizePool Firebase 구독
-  fbDb.ref('raffle/prizePool').on('value', snap=>{
-    const data=snap.val();
-    if(data){
-      const nameToObj={};
-      PRIZES.forEach(p=>nameToObj[p.name]=p);
-      prizePool=Object.values(data).map(n=>nameToObj[n]).filter(Boolean);
-    } else { prizePool=null; }
-    renderPrizeList();
-  });
+  renderPrizeList();
 
   // 당첨자 목록 실시간 구독
   if(raffleListener) fbDb.ref('raffle/winners').off('value', raffleListener);
@@ -754,7 +733,7 @@ function initRaffle(){
     if(!data||!data.winner||!data.startedAt)return;
     if(data.startedAt<=lastStartedAt)return;
     lastStartedAt=data.startedAt;
-    runSlotAnimation(data.winner);
+    runSlotAnimation({...data.winner, prize: data.prize||null});
   });
 }
 
