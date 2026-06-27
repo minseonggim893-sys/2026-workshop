@@ -943,16 +943,19 @@ const QUIZ_QUESTIONS=[
 ];
 const CHOICE_COLORS=['#E53935','#1E88E5','#43A047','#FB8C00'];
 const CHOICE_LABELS=['①','②','③','④'];
-let quizState=null; // Firebase에서 받은 상태
-let quizMyAnswer=null; // 내가 선택한 답
+let quizState=null;
+let quizMyAnswerQIndex=-1; // 어떤 문제에 답했는지
+let quizMyAnswer=null;
 let quizTimerInterval=null;
-let quizMyScore=0;
+let quizFbListener=null;
 
 function initQuiz(){
   const isAdmin=currentUser&&currentUser.name==='김민성';
   document.getElementById('quiz-start-btn').style.display=isAdmin?'block':'none';
   document.getElementById('quiz-reset-btn').style.display=isAdmin?'block':'none';
-  fbDb.ref('quiz').on('value', snap=>{
+  // 리스너 중복 방지
+  if(quizFbListener) fbDb.ref('quiz').off('value', quizFbListener);
+  quizFbListener=fbDb.ref('quiz').on('value', snap=>{
     quizState=snap.val();
     renderQuiz();
   });
@@ -999,9 +1002,9 @@ function renderQuizQuestion(s, isAdmin){
     <button class="quiz-choice c${i}" onclick="quizAnswer(${i})" id="qc${i}">
       ${CHOICE_LABELS[i]} ${c}
     </button>`).join('');
-  // 내가 이미 답한 경우
+  // 내가 이미 답한 경우 (이 문제에서)
   const myAnswerEl=document.getElementById('quiz-answered-msg');
-  if(quizMyAnswer!==null){
+  if(quizMyAnswerQIndex===s.qIndex){
     myAnswerEl.style.display='block';
     choicesEl.querySelectorAll('.quiz-choice').forEach(b=>b.classList.add('disabled'));
   } else {
@@ -1037,11 +1040,10 @@ function renderQuizQuestion(s, isAdmin){
 }
 
 function quizAnswer(idx){
-  if(quizMyAnswer!==null) return;
   if(!quizState||quizState.phase!=='question') return;
+  if(quizMyAnswerQIndex===quizState.qIndex) return; // 이미 이 문제에 답함
   quizMyAnswer=idx;
-  const startedAt=quizState.questionStartedAt||Date.now();
-  const elapsed=Date.now()-startedAt;
+  quizMyAnswerQIndex=quizState.qIndex;
   document.getElementById('quiz-answered-msg').style.display='block';
   document.getElementById('quiz-choices').querySelectorAll('.quiz-choice').forEach(b=>b.classList.add('disabled'));
   if(currentUser){
@@ -1070,33 +1072,39 @@ function renderQuizResult(s, isAdmin){
       <div class="quiz-bar-count">${counts[i]}명 (${pct}%)</div>
     </div>`;
   }).join('');
-  // 내 점수
-  const correct=quizMyAnswer===q.answer;
+  // 내 정답 여부
+  const myAnsweredThisQ = quizMyAnswerQIndex===s.qIndex;
+  const correct = myAnsweredThisQ && quizMyAnswer===q.answer;
   const scoreEl=document.getElementById('quiz-score-popup');
-  if(quizMyAnswer!==null){
+  if(myAnsweredThisQ){
     scoreEl.innerHTML=correct
       ?`✅ 정답! <span style="color:#7C3AED;">+700점</span>`
       :'❌ 오답...';
   } else {
     scoreEl.textContent='⏰ 시간 초과!';
   }
-  // TOP 5 순위
-  const scores=s.scores||{};
-  const top5=Object.entries(scores).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const medals=['🥇','🥈','🥉','4️⃣','5️⃣'];
-  const top5Html=top5.length?`
-    <div style="width:100%;margin-top:4px;">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:6px;">🏆 현재 TOP 5</div>
-      ${top5.map(([name,score],i)=>{
-        const isMe=currentUser&&(name===currentUser.name||name===currentUser.name.replace(/\./g,'_'));
-        return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;margin-bottom:4px;background:${isMe?'#EDE9FE':'var(--bg3)'};border:${isMe?'1.5px solid #7C3AED':'1.5px solid transparent'};">
-          <span style="font-size:16px;min-width:24px;">${medals[i]}</span>
-          <span style="font-size:13px;font-weight:700;color:var(--text);flex:1;">${name.replace(/_/g,' ')}</span>
-          <span style="font-size:13px;font-weight:800;color:#7C3AED;">${score}점</span>
-        </div>`;
-      }).join('')}
-    </div>`:'';
-  document.getElementById('quiz-score-popup').insertAdjacentHTML('afterend', top5Html);
+  // 이번 문제 정답자 TOP5
+  const thisAnswers=s.answers||{};
+  const winners=Object.entries(thisAnswers).filter(([,a])=>a===q.answer).slice(0,5);
+  const medals5=['🥇','🥈','🥉','4️⃣','5️⃣'];
+  let top5El=document.getElementById('quiz-top5-box');
+  if(!top5El){
+    top5El=document.createElement('div');
+    top5El.id='quiz-top5-box';
+    top5El.style.width='100%';
+    scoreEl.parentNode.insertBefore(top5El, scoreEl.nextSibling);
+  }
+  top5El.innerHTML=winners.length?`
+    <div style="font-size:12px;font-weight:700;color:var(--text3);margin:8px 0 6px;">🎯 이번 문제 정답자 (${winners.length}명)</div>
+    ${winners.map(([name],i)=>{
+      const isMe=currentUser&&(name===currentUser.name||name===currentUser.name.replace(/\./g,'_'));
+      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;margin-bottom:4px;background:${isMe?'#EDE9FE':'var(--bg3)'};border:${isMe?'1.5px solid #7C3AED':'1.5px solid transparent'};">
+        <span style="font-size:16px;min-width:24px;">${medals5[i]||'✅'}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text);">${name.replace(/_/g,' ')}</span>
+        <span style="font-size:12px;font-weight:800;color:#7C3AED;margin-left:auto;">+700점</span>
+      </div>`;
+    }).join('')}`
+  :'<div style="font-size:13px;color:var(--text3);text-align:center;padding:8px;">정답자 없음</div>';
   // 관리자
   const nextBtn=document.getElementById('quiz-next-btn');
   if(isAdmin){
@@ -1116,11 +1124,12 @@ function renderQuizFinal(s, isAdmin){
   const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
   const medals=['🥇','🥈','🥉'];
   document.getElementById('quiz-leaderboard').innerHTML=sorted.map(([name,score],i)=>{
-    const me=currentUser&&name.replace(/_/g,'.')===currentUser.name||name===currentUser?.name;
-    return `<div class="quiz-lb-row" style="${me?'border-color:#7C3AED;background:#F5F3FF;':''}">
-      <div class="quiz-lb-rank">${medals[i]||`${i+1}`}</div>
-      <div class="quiz-lb-name">${name.replace(/_/g,' ')}</div>
-      <div class="quiz-lb-score">${score}점</div>
+    const isMe=currentUser&&(name===currentUser.name||name===currentUser.name.replace(/\./g,'_'));
+    const isMedal=i<3;
+    return `<div class="quiz-lb-row" style="${isMe?'border-color:#7C3AED;background:#F5F3FF;':''};${isMedal?'border-width:2px;':''}">
+      <div class="quiz-lb-rank" style="font-size:${isMedal?'26px':'18px'};">${medals[i]||`${i+1}위`}</div>
+      <div class="quiz-lb-name" style="${isMedal?'font-size:16px;':''};">${name.replace(/_/g,' ')}${isMe?' 👈':''}</div>
+      <div class="quiz-lb-score" style="${isMedal?'font-size:17px;':''};">${score}점</div>
     </div>`;
   }).join('');
   document.getElementById('quiz-finish-btn').style.display=isAdmin?'block':'none';
@@ -1154,7 +1163,6 @@ function quizAdminShowResult(){
 function quizAdminNext(){
   if(!quizState) return;
   const nextQ=quizState.qIndex+1;
-  quizMyAnswer=null;
   fbDb.ref('quiz').update({
     phase:'question', qIndex:nextQ,
     questionStartedAt:Date.now(),
@@ -1168,7 +1176,8 @@ function quizAdminFinal(){
 
 function quizAdminReset(){
   clearInterval(quizTimerInterval);
-  quizMyAnswer=null; quizMyScore=0;
+  quizMyAnswer=null;
+  quizMyAnswerQIndex=-1;
   fbDb.ref('quiz').remove();
 }
 </script>
