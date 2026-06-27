@@ -291,11 +291,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>경품 추첨</h1><span style="margin-left:auto;font-size:10px;color:var(--text-muted);opacity:0.6;">DUSH AX(AI+X) 신기술 연구회</span></div>
   <div class="content">
     <div class="raffle-wrap">
-      <!-- 경품 목록 -->
-      <div id="prize-list" style="width:100%;margin-bottom:16px;background:var(--bg2);border-radius:14px;padding:12px 14px;">
-        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:8px;">🎁 경품 목록</div>
-        <div id="prize-list-items"></div>
-      </div>
       <div class="raffle-slot" id="raffle-slot">
         <div class="raffle-hint" id="raffle-hint">추첨 대기 중...</div>
         <div class="raffle-name" id="raffle-name" style="display:none;"></div>
@@ -306,6 +301,11 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
       <div class="raffle-count" id="raffle-count"></div>
       <button class="raffle-btn" id="raffle-btn" onclick="startRaffle()">🎰 추첨 시작!</button>
       <button class="raffle-reset-btn" id="raffle-reset-btn" onclick="resetRaffle()">↺ 당첨자 초기화</button>
+      <!-- 경품 목록 -->
+      <div id="prize-list" style="width:100%;margin-bottom:16px;background:var(--bg2);border-radius:14px;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:8px;">🎁 경품 목록</div>
+        <div id="prize-list-items"></div>
+      </div>
       <div id="raffle-admin-badge" style="display:none;font-size:13px;color:var(--text3);margin-bottom:16px;text-align:center;">📺 추첨 결과를 실시간으로 볼 수 있어요</div>
       <div class="raffle-winners" id="raffle-winners"></div>
     </div>
@@ -526,20 +526,26 @@ function renderMemberList(){
   });
   document.getElementById('member-list-content').innerHTML=h;
 }
-// 경품 목록 (순서대로 배정)
+// 경품 목록
 const PRIZES=[
   {name:'최고급 원목도마',count:2,sponsor:'건축리모델링과 협찬',emoji:'🪵'},
   {name:'최고급 원두',count:3,sponsor:'파티시에과 협찬',emoji:'☕'},
   {name:'최고급 보조배터리',count:3,sponsor:'전기배터리과 협찬',emoji:'🔋'},
   {name:'최고급 와이퍼',count:3,sponsor:'모빌리티과 협찬',emoji:'🚗'},
+  {name:'최고급 안마기',count:3,sponsor:'협찬',emoji:'💆'},
 ];
+// 경품 풀 생성 (셔플된 고정 순서 - Firebase에서 관리)
+let prizePool=null;
+function buildPrizePool(){
+  const pool=[];
+  PRIZES.forEach(p=>{for(let i=0;i<p.count;i++)pool.push(p);});
+  // Fisher-Yates shuffle
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  return pool;
+}
 function getPrizeForIndex(idx){
-  let acc=0;
-  for(const p of PRIZES){
-    if(idx<acc+p.count) return p;
-    acc+=p.count;
-  }
-  return null;
+  if(!prizePool||prizePool.length===0) return null;
+  return prizePool[idx]||null;
 }
 
 // 추첨
@@ -608,7 +614,12 @@ function startRaffle(){
   const pool=getRafflePool();
   if(!pool.length)return;
   const winner=pool[Math.floor(Math.random()*pool.length)];
-  fbDb.ref('raffle/current').set({winner, startedAt: Date.now()});
+  // prizePool 없으면 생성 후 저장
+  const doStart=()=>fbDb.ref('raffle/current').set({winner, startedAt: Date.now()});
+  if(!prizePool||prizePool.length===0){
+    const newPool=buildPrizePool();
+    fbDb.ref('raffle/prizePool').set(newPool.map(p=>p.name)).then(()=>doStart());
+  } else { doStart(); }
 }
 
 // 모든 사람이 공통으로 실행하는 슬롯 애니메이션
@@ -666,7 +677,11 @@ function runSlotAnimation(winner){
 function resetRaffle(){
   if(raffleWinners.length===0)return;
   clearTimeout(raffleTimer);
-  fbDb.ref('raffle').remove();
+  fbDb.ref('raffle').remove().then(()=>{
+    const newPool=buildPrizePool();
+    fbDb.ref('raffle/prizePool').set(newPool.map(p=>p.name));
+  });
+  prizePool=null;
   const slot=document.getElementById('raffle-slot');
   slot.className='raffle-slot';
   document.getElementById('raffle-hint').style.display='block';
@@ -678,16 +693,21 @@ function resetRaffle(){
 function renderPrizeList(){
   const el=document.getElementById('prize-list-items');
   if(!el)return;
-  let acc=0;
-  el.innerHTML=PRIZES.map((p,pi)=>{
-    const rows=Array.from({length:p.count},(_,k)=>{
-      const winnerIdx=acc+k;
-      const w=raffleWinners[winnerIdx];
-      const drawn=!!w;
-      return `<span style="font-size:12px;padding:2px 8px;border-radius:10px;margin:2px;display:inline-block;background:${drawn?'#D1FAE5':'var(--bg3)'};color:${drawn?'#065F46':'var(--text3)'};font-weight:${drawn?700:400};">${drawn?w.name:`${winnerIdx+1}번`}</span>`;
-    }).join('');
-    acc+=p.count;
-    return `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;"><span style="font-size:13px;min-width:28px;">${p.emoji}</span><div><div style="font-size:12px;font-weight:700;color:var(--text1);">${p.name} <span style="font-weight:400;color:var(--text3);">×${p.count}</span></div><div style="font-size:11px;color:var(--text3);margin-bottom:3px;">${p.sponsor}</div><div>${rows}</div></div></div>`;
+  // prizePool 없으면 PRIZES 기본 목록만 표시
+  if(!prizePool||prizePool.length===0){
+    el.innerHTML=PRIZES.map(p=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span>${p.emoji}</span><span style="font-size:12px;font-weight:700;color:var(--text1);">${p.name} <span style="font-weight:400;color:var(--text3);">×${p.count}</span></span><span style="font-size:11px;color:var(--text3);">${p.sponsor}</span></div>`).join('');
+    return;
+  }
+  // prizePool 기반으로 순번별 경품 표시
+  el.innerHTML=prizePool.map((p,i)=>{
+    const w=raffleWinners[i];
+    const drawn=!!w;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+      <span style="font-size:12px;color:var(--text3);min-width:22px;font-weight:600;">${i+1}.</span>
+      <span style="font-size:15px;">${p.emoji}</span>
+      <span style="font-size:12px;font-weight:700;color:var(--text1);flex:1;">${p.name}<span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:4px;">${p.sponsor}</span></span>
+      <span style="font-size:12px;padding:2px 10px;border-radius:10px;background:${drawn?'#D1FAE5':'var(--bg3)'};color:${drawn?'#065F46':'var(--text3)'};font-weight:${drawn?700:400};">${drawn?w.name:'미추첨'}</span>
+    </div>`;
   }).join('');
 }
 
@@ -696,7 +716,16 @@ function initRaffle(){
   document.getElementById('raffle-btn').style.display=isAdmin?'block':'none';
   document.getElementById('raffle-reset-btn').style.display=isAdmin?'block':'none';
   document.getElementById('raffle-admin-badge').style.display=isAdmin?'none':'block';
-  renderPrizeList();
+  // prizePool Firebase 구독
+  fbDb.ref('raffle/prizePool').on('value', snap=>{
+    const data=snap.val();
+    if(data){
+      const nameToObj={};
+      PRIZES.forEach(p=>nameToObj[p.name]=p);
+      prizePool=Object.values(data).map(n=>nameToObj[n]).filter(Boolean);
+    } else { prizePool=null; }
+    renderPrizeList();
+  });
 
   // 당첨자 목록 실시간 구독
   if(raffleListener) fbDb.ref('raffle/winners').off('value', raffleListener);
