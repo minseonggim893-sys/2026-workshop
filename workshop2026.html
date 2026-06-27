@@ -159,7 +159,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .raffle-reset-btn:active{background:var(--bg3);}
 .raffle-winners{width:100%;}
 .raffle-winners-title{font-size:13px;font-weight:700;color:var(--text3);margin-bottom:10px;}
-.raffle-winner-chip{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);border:1.5px solid var(--green-mid);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;color:var(--green);margin:4px;}
+.raffle-winner-chip{display:flex;align-items:center;gap:6px;background:var(--green-bg);border:1.5px solid var(--green-mid);border-radius:12px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--green);margin:4px 0;}
+.raffle-prize{font-size:14px;font-weight:700;color:#7C3AED;background:#EDE9FE;border-radius:10px;padding:6px 14px;margin-top:6px;}
 .raffle-count{font-size:13px;color:var(--text3);margin-bottom:16px;font-weight:500;}
 @keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(120px) rotate(720deg);opacity:0;}}
 .confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confetti-fall .8s ease-out forwards;}
@@ -290,11 +291,17 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   <div class="header"><button class="back-btn" onclick="showTab('home')">←</button><h1>경품 추첨</h1><span style="margin-left:auto;font-size:10px;color:var(--text-muted);opacity:0.6;">DUSH AX(AI+X) 신기술 연구회</span></div>
   <div class="content">
     <div class="raffle-wrap">
+      <!-- 경품 목록 -->
+      <div id="prize-list" style="width:100%;margin-bottom:16px;background:var(--bg2);border-radius:14px;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:8px;">🎁 경품 목록</div>
+        <div id="prize-list-items"></div>
+      </div>
       <div class="raffle-slot" id="raffle-slot">
         <div class="raffle-hint" id="raffle-hint">추첨 대기 중...</div>
         <div class="raffle-name" id="raffle-name" style="display:none;"></div>
         <div class="raffle-role" id="raffle-role" style="display:none;"></div>
         <div class="raffle-dept" id="raffle-dept" style="display:none;"></div>
+        <div class="raffle-prize" id="raffle-prize" style="display:none;"></div>
       </div>
       <div class="raffle-count" id="raffle-count"></div>
       <button class="raffle-btn" id="raffle-btn" onclick="startRaffle()">🎰 추첨 시작!</button>
@@ -519,6 +526,22 @@ function renderMemberList(){
   });
   document.getElementById('member-list-content').innerHTML=h;
 }
+// 경품 목록 (순서대로 배정)
+const PRIZES=[
+  {name:'최고급 원목도마',count:2,sponsor:'건축리모델링과 협찬',emoji:'🪵'},
+  {name:'최고급 원두',count:3,sponsor:'파티시에과 협찬',emoji:'☕'},
+  {name:'최고급 보조배터리',count:3,sponsor:'전기배터리과 협찬',emoji:'🔋'},
+  {name:'최고급 와이퍼',count:3,sponsor:'모빌리티과 협찬',emoji:'🚗'},
+];
+function getPrizeForIndex(idx){
+  let acc=0;
+  for(const p of PRIZES){
+    if(idx<acc+p.count) return p;
+    acc+=p.count;
+  }
+  return null;
+}
+
 // 추첨
 let raffleWinners=[];
 let raffleTimer=null;
@@ -544,7 +567,11 @@ function updateRaffleWinners(){
   if(!el)return;
   if(raffleWinners.length===0){el.innerHTML='';return;}
   el.innerHTML=`<div class="raffle-winners-title">🏆 당첨자 (${raffleWinners.length}명)</div>`
-    +raffleWinners.map((w,i)=>`<span class="raffle-winner-chip">${i+1}. ${w.name}</span>`).join('');
+    +raffleWinners.map((w,i)=>{
+      const p=getPrizeForIndex(i);
+      const prizeStr=p?`<span style="font-size:11px;color:var(--text3);font-weight:500;margin-left:4px;">${p.emoji}${p.name}</span>`:'';
+      return `<div class="raffle-winner-chip">${i+1}. ${w.name}${prizeStr}</div>`;
+    }).join('');
 }
 
 function showWinnerDisplay(winner){
@@ -617,6 +644,13 @@ function runSlotAnimation(winner){
       nameEl.textContent=winner.name;
       roleEl.textContent=winner.role||'';
       deptEl.textContent=winner.dept||'';
+      const prizeEl=document.getElementById('raffle-prize');
+      const nextIdx=raffleWinners.length;
+      const prize=getPrizeForIndex(nextIdx);
+      if(prizeEl){
+        if(prize){prizeEl.textContent=`${prize.emoji} ${prize.name}`;prizeEl.style.display='block';}
+        else{prizeEl.style.display='none';}
+      }
       slot.className='raffle-slot winner';
       showConfetti();
       // 관리자만 당첨자 목록에 저장
@@ -641,11 +675,28 @@ function resetRaffle(){
   document.getElementById('raffle-dept').style.display='none';
 }
 
+function renderPrizeList(){
+  const el=document.getElementById('prize-list-items');
+  if(!el)return;
+  let acc=0;
+  el.innerHTML=PRIZES.map((p,pi)=>{
+    const rows=Array.from({length:p.count},(_,k)=>{
+      const winnerIdx=acc+k;
+      const w=raffleWinners[winnerIdx];
+      const drawn=!!w;
+      return `<span style="font-size:12px;padding:2px 8px;border-radius:10px;margin:2px;display:inline-block;background:${drawn?'#D1FAE5':'var(--bg3)'};color:${drawn?'#065F46':'var(--text3)'};font-weight:${drawn?700:400};">${drawn?w.name:`${winnerIdx+1}번`}</span>`;
+    }).join('');
+    acc+=p.count;
+    return `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;"><span style="font-size:13px;min-width:28px;">${p.emoji}</span><div><div style="font-size:12px;font-weight:700;color:var(--text1);">${p.name} <span style="font-weight:400;color:var(--text3);">×${p.count}</span></div><div style="font-size:11px;color:var(--text3);margin-bottom:3px;">${p.sponsor}</div><div>${rows}</div></div></div>`;
+  }).join('');
+}
+
 function initRaffle(){
   const isAdmin=currentUser&&currentUser.name==='김민성';
   document.getElementById('raffle-btn').style.display=isAdmin?'block':'none';
   document.getElementById('raffle-reset-btn').style.display=isAdmin?'block':'none';
   document.getElementById('raffle-admin-badge').style.display=isAdmin?'none':'block';
+  renderPrizeList();
 
   // 당첨자 목록 실시간 구독
   if(raffleListener) fbDb.ref('raffle/winners').off('value', raffleListener);
@@ -654,6 +705,7 @@ function initRaffle(){
     raffleWinners=data?Object.values(data):[];
     updateRaffleCount();
     updateRaffleWinners();
+    renderPrizeList();
     if(raffleWinners.length===0){
       const slot=document.getElementById('raffle-slot');
       if(slot&&slot.className.includes('winner')){
