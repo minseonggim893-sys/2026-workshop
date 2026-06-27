@@ -188,7 +188,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .quiz-answered-msg{text-align:center;font-size:16px;font-weight:700;color:#7C3AED;padding:12px;background:#EDE9FE;border-radius:14px;margin:0 16px;}
 .quiz-timer{font-size:28px;font-weight:900;color:#7C3AED;text-align:center;padding:4px 0;}
 .quiz-result-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px;}
-.quiz-result-title{font-size:16px;font-weight:800;color:var(--text);}
+.quiz-result-title{font-size:13px;font-weight:700;color:var(--text3);text-align:center;}
+.quiz-correct-answer{font-size:22px;font-weight:900;color:#7C3AED;text-align:center;background:#EDE9FE;border-radius:16px;padding:14px 16px;width:100%;}
 .quiz-bars{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .quiz-bar-item{border-radius:12px;padding:10px;background:var(--bg3);}
 .quiz-bar-label{font-size:12px;font-weight:700;margin-bottom:4px;}
@@ -1012,34 +1013,36 @@ function renderQuizQuestion(s, isAdmin){
   } else {
     myAnswerEl.style.display='none';
   }
-  // 관리자 응답 현황
+  // 관리자 응답 현황 - 몇 명 답했는지만 표시
   const adminBar=document.getElementById('quiz-admin-answer-bar');
-  if(isAdmin&&s.answers){
+  if(isAdmin){
     adminBar.style.display='flex';
-    const counts=[0,0,0,0];
-    Object.values(s.answers).forEach(a=>{ const idx=typeof a==='object'?a.a:a; if(idx>=0&&idx<=3) counts[idx]++; });
-    const total=counts.reduce((a,b)=>a+b,0);
-    adminBar.innerHTML=`응답: ${total}명 — `+counts.map((c,i)=>`<span style="color:${CHOICE_COLORS[i]};font-weight:700;">${CHOICE_LABELS[i]}${c}</span>`).join(' ');
+    const answeredCount=s.answers?Object.keys(s.answers).length:0;
+    adminBar.innerHTML=`<span style="font-weight:700;">✍️ 답변 완료: ${answeredCount}명</span>`;
   } else { adminBar.style.display='none'; }
-  // 관리자: 다음(결과공개) 버튼 대신 admin-bar에 결과보기 버튼
   // 타이머
   clearInterval(quizTimerInterval);
   const startedAt=s.questionStartedAt||Date.now();
   const timeLimit=q.time*1000;
+  const revealBtn=document.getElementById('quiz-reveal-btn');
   function tick(){
     const elapsed=Date.now()-startedAt;
     const remain=Math.max(0,Math.ceil((timeLimit-elapsed)/1000));
     document.getElementById('quiz-timer').textContent=remain;
     const pct=Math.max(0,Math.min(100,(timeLimit-elapsed)/timeLimit*100));
     document.getElementById('quiz-progress-bar').style.width=pct+'%';
+    // 타이머 끝나야 결과공개 버튼 활성화
+    if(revealBtn&&isAdmin) revealBtn.disabled=remain>0;
     if(remain<=0){ clearInterval(quizTimerInterval); }
   }
   tick();
   quizTimerInterval=setInterval(tick,200);
   // 관리자 버튼
-  const revealBtn=document.getElementById('quiz-reveal-btn');
   const midResetBtn=document.getElementById('quiz-mid-reset-btn');
-  if(revealBtn) revealBtn.style.display=isAdmin?'block':'none';
+  if(revealBtn){
+    revealBtn.style.display=isAdmin?'block':'none';
+    revealBtn.style.opacity=isAdmin?'':'';
+  }
   if(midResetBtn) midResetBtn.style.display=isAdmin?'block':'none';
 }
 
@@ -1064,8 +1067,16 @@ function renderQuizResult(s, isAdmin){
   answers.forEach(a=>{ const idx=typeof a==='object'?a.a:a; if(idx>=0&&idx<=3) counts[idx]++; });
   const total=answers.length||1;
   // 정답 텍스트
-  document.getElementById('quiz-result-title').innerHTML=
-    `정답: <span style="color:#7C3AED;font-weight:900;">${CHOICE_LABELS[q.answer]} ${q.choices[q.answer]}</span>`;
+  document.getElementById('quiz-result-title').innerHTML=`정답 공개 ✅`;
+  // 정답 크게 표시
+  let answerBox=document.getElementById('quiz-answer-box');
+  if(!answerBox){
+    answerBox=document.createElement('div');
+    answerBox.id='quiz-answer-box';
+    answerBox.className='quiz-correct-answer';
+    document.getElementById('quiz-result-title').insertAdjacentElement('afterend',answerBox);
+  }
+  answerBox.textContent=`${CHOICE_LABELS[q.answer]} ${q.choices[q.answer]}`;
   // 바 차트
   document.getElementById('quiz-bars').innerHTML=q.choices.map((c,i)=>{
     const pct=Math.round(counts[i]/total*100);
