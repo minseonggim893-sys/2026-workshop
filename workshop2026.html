@@ -1074,16 +1074,29 @@ function renderQuizResult(s, isAdmin){
   const correct=quizMyAnswer===q.answer;
   const scoreEl=document.getElementById('quiz-score-popup');
   if(quizMyAnswer!==null){
-    if(correct){
-      const gained=Math.round(1000-(s.myAnswerTime||0)/q.time/1000*500);
-      quizMyScore+=(gained>0?gained:500);
-      scoreEl.innerHTML=`✅ 정답! <span style="color:#7C3AED;">+${gained>0?gained:500}점</span>`;
-    } else {
-      scoreEl.textContent='❌ 오답...';
-    }
+    scoreEl.innerHTML=correct
+      ?`✅ 정답! <span style="color:#7C3AED;">+700점</span>`
+      :'❌ 오답...';
   } else {
     scoreEl.textContent='⏰ 시간 초과!';
   }
+  // TOP 5 순위
+  const scores=s.scores||{};
+  const top5=Object.entries(scores).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const medals=['🥇','🥈','🥉','4️⃣','5️⃣'];
+  const top5Html=top5.length?`
+    <div style="width:100%;margin-top:4px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:6px;">🏆 현재 TOP 5</div>
+      ${top5.map(([name,score],i)=>{
+        const isMe=currentUser&&(name===currentUser.name||name===currentUser.name.replace(/\./g,'_'));
+        return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;margin-bottom:4px;background:${isMe?'#EDE9FE':'var(--bg3)'};border:${isMe?'1.5px solid #7C3AED':'1.5px solid transparent'};">
+          <span style="font-size:16px;min-width:24px;">${medals[i]}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--text);flex:1;">${name.replace(/_/g,' ')}</span>
+          <span style="font-size:13px;font-weight:800;color:#7C3AED;">${score}점</span>
+        </div>`;
+      }).join('')}
+    </div>`:'';
+  document.getElementById('quiz-score-popup').insertAdjacentHTML('afterend', top5Html);
   // 관리자
   const nextBtn=document.getElementById('quiz-next-btn');
   if(isAdmin){
