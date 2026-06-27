@@ -751,8 +751,8 @@ fbDb.ref('members').on('value', snap=>{
     const fresh=members.find(m=>m.name===currentUser.name);
     if(fresh) currentUser=fresh;
   }
-  if(document.getElementById('tab-home')?.classList.contains('active')) renderHome();
-  if(document.getElementById('tab-members')?.classList.contains('active')) renderMemberList();
+  if(document.getElementById('screen-home')?.classList.contains('active')) renderHome();
+  if(document.getElementById('screen-members')?.classList.contains('active')) renderMemberList();
 });
 </script>
 </body>
