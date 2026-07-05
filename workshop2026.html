@@ -905,7 +905,7 @@ async function saveEdit(){
   if(editField==='lunch') document.getElementById('my-lunch').textContent=val||'—';
   // 시트 저장
   try{
-    await fetch(`${API_URL}?action=update&name=${encodeURIComponent(currentUser.name)}&${editField}=${encodeURIComponent(val)}`);
+    await fetch(`${API_URL}?action=handleUpdate&name=${encodeURIComponent(currentUser.name)}&field=${encodeURIComponent(editField)}&value=${encodeURIComponent(val)}`);
   }catch(e){console.warn('저장 실패',e);}
 }
 
