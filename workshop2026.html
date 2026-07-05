@@ -844,7 +844,7 @@ async function fetchMembers(){
   try{
     const [mRes, cRes]=await Promise.all([
       fetch(API_URL),
-      fetch(API_URL+'?action=menus')
+      fetch(API_URL+'?action=getMenus')
     ]);
     const mData=await mRes.json();
     const cData=await cRes.json();
