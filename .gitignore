@@ -1,0 +1,9 @@
+*.png
+*.jpg
+*.jpeg
+*.xlsx
+*.zip
+*.hwp
+*.csv
+*.tsv
+~$*
